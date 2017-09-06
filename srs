@@ -1,0 +1,407 @@
+#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+#include <windows.h>
+void search_student();
+struct student
+{
+    char ID[15];
+    char name[20];
+    char add[20];
+    char parname[20];
+    int Class;
+    long unsigned int phone_no;
+};
+struct student stu;
+
+/*Windowos work*/
+void SetColor(int ForgC)
+{
+     WORD wColor;
+     ///We will need this handle to get the current background attribute
+     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+     CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+     ///We use csbi for the wAttributes word.
+     if(GetConsoleScreenBufferInfo(hStdOut, &csbi))
+     {
+        ///Mask out all but the background attribute, and add in the forgournd color
+          wColor = (csbi.wAttributes & 0xF0) + (ForgC & 0x0F);
+          SetConsoleTextAttribute(hStdOut, wColor);
+     }
+     return;
+}
+
+void ClearConsoleToColors(int ForgC, int BackC)
+{
+     WORD wColor = ((BackC & 0x0F) << 4) + (ForgC & 0x0F);
+     ///Get the handle to the current output buffer...
+     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+     ///This is used to reset the carat/cursor to the top left.
+     COORD coord = {0, 0};
+     ///A return value... indicating how many chars were written
+     ///   not used but we need to capture this since it will be
+     ///   written anyway (passing NULL causes an access violation).
+     DWORD count;
+     ///This is a structure containing all of the console info
+     /// it is used here to find the size of the console.
+     CONSOLE_SCREEN_BUFFER_INFO csbi;
+     ///Here we will set the current color
+     SetConsoleTextAttribute(hStdOut, wColor);
+     if(GetConsoleScreenBufferInfo(hStdOut, &csbi))
+     {
+          ///This fills the buffer with a given character (in this case 32=space).
+          FillConsoleOutputCharacter(hStdOut, (TCHAR) 32, csbi.dwSize.X * csbi.dwSize.Y, coord, &count);
+          FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, csbi.dwSize.X * csbi.dwSize.Y, coord, &count );
+          ///This will set our cursor position for the next print statement.
+          SetConsoleCursorPosition(hStdOut, coord);
+     }
+     return;
+}
+
+void SetColorAndBackground(int ForgC, int BackC)
+{
+     WORD wColor = ((BackC & 0x0F) << 4) + (ForgC & 0x0F);;
+     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), wColor);
+     return;
+}
+
+COORD coord = {0,0}; ///set the cordinate to 0, 0 (top-left corner of window);
+void gotoxy(int x, int y){
+    coord.X = x; coord.Y = y; /// X and Y coordinates
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void drawRectangle(){
+    int i, j;
+    gotoxy(0,0);
+    printf("%c",201);
+    for(i = 1; i < 78; i++){
+        gotoxy(i, 0);
+        printf("%c",205);
+    }
+    gotoxy(78,0);
+    printf("%c",187);
+    for(i = 1; i < 25; i++){
+        gotoxy(78, i);
+        if(i == 6){
+            printf("%c",185);
+        }else{
+            printf("%c",186);
+        }
+    }
+    gotoxy(78, 25);
+    printf("%c",188);
+    for(i = 77; i > 0; i--){
+        gotoxy(i,25);
+        if(i == 35){
+            printf("%c",202);
+        }else{
+            printf("%c",205);
+        }
+    }
+    gotoxy(0,25);
+    printf("%c",200);
+    for(i = 24; i > 0; i--){
+        gotoxy(0,i);
+        if(i == 6){
+            printf("%c",204);
+        }else{
+            printf("%c",186);
+        }
+    }
+
+    for(i = 1; i < 78; i++){
+        gotoxy(i,6);
+        if(i == 35){
+            printf("%c",203);
+        }else{
+            printf("%c",205);
+        }
+    }
+
+    for(i = 7; i < 25; i++){
+        gotoxy(35,i);
+        printf("%c",186);
+    }
+
+}
+
+void clearWindow(){
+    int i,j;
+    for(i = 37; i < 78; i++){
+        for(j = 7; j < 25; j++){
+            gotoxy(i,j);printf(" ");
+        }
+    }
+    return;
+}
+
+void clearchoice(){
+    int i;
+    for(i = 2; i < 30; i++){
+        {
+            gotoxy(i,24);printf(" ");
+        }
+    }
+    return;
+}
+/*End of Window.h */
+
+void window(){
+    drawRectangle();
+    gotoxy(28,4);
+    printf("STUDENT RECORD SYSTEM");}
+
+void print_heading(const char st[]){
+    SetColorAndBackground(31,28);
+    gotoxy(44,8);printf("SRS : %s",st);
+    SetColorAndBackground(17,15);
+}
+
+void search_student(){
+    clearWindow();
+    print_heading("Search Record Portal");
+    char s_id[15];
+    int isFound = 0;
+    gotoxy(37,10);printf("Enter ID of Student: ");fflush(stdin);//fflush use to clear the output buffer
+    gets(s_id);
+    FILE *fp;
+    fp = fopen("record.txt","rb");
+    while(fread(&stu,sizeof(stu),1,fp) == 1){
+        if(strcmp(s_id,stu.ID) == 0){
+            isFound = 1;
+            break;
+        }
+    }
+    if(isFound == 1){
+        gotoxy(37,12);printf("The record is Found");
+        gotoxy(37,14);printf("ID: %s",stu.ID);
+        gotoxy(37,15);printf("Name: %s",stu.name);
+        gotoxy(37,16);printf("Address: %s",stu.add);
+        gotoxy(37,17);printf("Parent's Name: %s",stu.parname);
+        gotoxy(37,18);printf("Class: %d",stu.Class);
+        gotoxy(37,19);printf("Phone No: %ld",stu.phone_no);
+    }else{
+        gotoxy(37,12);printf("Sorry, No record found in the database");
+    }
+    fclose(fp);
+    return;
+}
+
+void add_student(){
+    clearWindow();
+    print_heading("Add Record");
+    int print = 37;
+    FILE *fp;
+    fp = fopen("record.txt","ab+");
+    //SetColor(45);
+    if(fp == NULL){
+        MessageBox(0,"Error in Opening file\nMake sure your file is not write protected","Warning",0);
+
+    }else{
+        fflush(stdin);
+        gotoxy(print,10);printf("ID: ");gets(stu.ID);
+        gotoxy(print,12);printf("Name: ");gets(stu.name);
+        gotoxy(print,14);printf("Address: ");gets(stu.add);
+        gotoxy(print,16);printf("Parent's name: ");gets(stu.parname);
+        gotoxy(print,18);printf("Class: ");scanf("%d",&stu.Class);
+        gotoxy(print,20);printf("Phone Number: ");scanf("%ld",&stu.phone_no);
+        fwrite(&stu, sizeof(stu), 1, fp);
+		/* stu : stu is the reference of a structure stored in memory.
+		   size : size(sizeof(stu) is the total number of bytes to be written.
+		   n : n(1) is number of times a record will be written.
+		   FILE* : FILE*(fp) is a file where the records will be written in binary mode. 
+		*/
+        gotoxy(40,22); printf("The record is sucessfully added");
+    }
+    fclose(fp);
+    return;
+}
+
+void mod_student(){
+    clearWindow();
+    print_heading("Modify Record");
+    SetColor(45);
+    char s_id[15];
+    int isFound = 0;
+    gotoxy(37,12);printf("Update section ");gotoxy(37,13);printf("Student ID: ");fflush(stdin);
+    gets(s_id);
+    FILE *fp;
+    fp = fopen("record.txt","rb+");
+	    while(fread(&stu, sizeof(stu),1,fp) == 1){
+        if(strcmp(s_id, stu.ID) == 0){
+            fflush(stdin);
+            gotoxy(37,14);printf("ID: ");gets(stu.ID);
+            gotoxy(37,15);printf("Name: ");gets(stu.name);
+            gotoxy(37,16);printf("Address: ");gets(stu.add);
+            gotoxy(37,17);printf("Parent's name: ");gets(stu.parname);
+            gotoxy(37,18);printf("Class: ");scanf("%d",&stu.Class);
+            gotoxy(37,19);printf("Phone Number: ");scanf("%ld",&stu.phone_no);
+            gotoxy(45,21);printf("RECORD IS UPDATED: ");
+            fseek(fp,-sizeof(stu), SEEK_CUR);
+            fwrite(&stu,sizeof(stu), 1, fp);
+            isFound = 1;
+            break;
+        }
+    }
+    if(!isFound){
+        gotoxy(37, 12);printf("No Record Found");
+    }
+    fclose(fp);
+    SetColor(1);
+    return;
+}
+
+void delete_student()
+{
+    clearWindow();
+    print_heading("Delete Record");
+    SetColor(45);
+    char s_id[15];
+    int isFound = 0;
+    gotoxy(37,10);printf("Enter ID to Delete: ");fflush(stdin);
+    gets(s_id);
+    FILE *fp, *temp;
+    fp = fopen("record.txt","rb+");
+    temp = fopen("temp.txt", "wb+");
+    while(fread(&stu,sizeof(stu),1,fp)==1)
+    /* stu : stu is the reference of a structure stored in memory.
+		   size : size(sizeof(stu) is the total number of bytes to be written.
+		   n : n(1) is number of times a record will be written.
+		   FILE* : FILE*(fp) is a file where the records will be written in binary mode. 
+		*/
+	{
+        if(strcmp(s_id,stu.ID) == 0)
+            fwrite(&stu,sizeof(stu),1,temp);
+        else
+            isFound=1;   
+        
+    }
+    fclose(fp);
+    fclose(temp);
+    remove("record.txt");
+    rename("temp.txt","record.txt");
+    if(isFound==0)
+	{
+		gotoxy(37,12);printf("No Such Record Found");
+	}
+    else
+	{
+		gotoxy(37,12);printf("The record is sucessfully deleted");
+	}    
+    SetColor(28);
+    return;
+}
+
+int count_student()
+{
+	clearWindow();
+	int count=0;
+	FILE *fp;
+    fp = fopen("record.txt","rb+");
+	    while(fread(&stu, sizeof(stu),1,fp) == 1){
+        	count++;
+    	}		
+    	
+    	return count;
+	}
+
+void display_student()
+{
+	//code
+	int cn;
+	cn=count_student();
+	clearWindow();
+	if(cn!=0)
+	{
+		int sno=1,y=11;
+		char c;
+		gotoxy(50,7);printf("Students Name");
+		gotoxy(37,9);printf("Sno.   ID    NAME");
+		FILE *fp;
+	    fp = fopen("record.txt","rb+");
+	    while((fread(&stu,sizeof(stu),1,fp)) ==1)
+		{
+	    	fflush(stdin);    	
+	        gotoxy(37,y);printf("%d -    %s    %s",sno,stu.ID,stu.name);
+	        y=y+2;
+	        sno=sno+1;
+	        
+	    }
+	    gotoxy(37,y);printf("Want to search student From above list?");
+	    gotoxy(37,y+2);printf("Press 'Y' for 'yes' or 'N' for 'NO' ");
+	    scanf("%c",&c);
+	    if(c=='y'||c=='Y')
+	    {	
+	   		search_student();
+		}
+	}
+	else
+	{
+		gotoxy(45,12);printf("SORRY NO RECORDS FOUND");
+	}
+}
+
+
+void main_window(){
+	int cn=0;
+    int choice;
+    clearWindow();
+    SetColor(28);
+    while(1){
+        gotoxy(2,10);printf("1. Add Student Record");
+        gotoxy(2,12);printf("2. Delete Student Record");
+        gotoxy(2,14);printf("3. Update Student Record");
+        gotoxy(2,16);printf("4. Search Student Record");
+        gotoxy(2,18);printf("5. Student Strength");
+        gotoxy(2,20);printf("6. Details of all students");
+        gotoxy(2,22);printf("7. Exit");
+        gotoxy(2,24);printf("Enter your choice: ");fflush(stdin);
+        scanf("%d",&choice);
+        switch(choice){
+            case 1:
+            	clearchoice();
+                add_student();	
+                break;
+            case 2:
+            	clearchoice();
+                delete_student();
+                break;
+            case 3:
+            	clearchoice();
+                mod_student();
+                break;
+            case 4:
+            	clearchoice();
+            	search_student();
+                break;
+            case 7:
+                exit(0);
+                break;
+            case 6:
+            	clearchoice();
+            	display_student();
+            	break;
+            case 5:
+            	clearchoice();
+            	cn=count_student();
+            	gotoxy(43,8);printf("Student Strenth Portal");
+				gotoxy(37,10);printf("Total Strength: %d",cn);
+
+            	break;
+            default:
+            	gotoxy(26,24);printf("Invalid Input");
+            	break;
+            	
+        }
+    }
+}
+
+int main(){
+    ClearConsoleToColors(9,0); /*change console windows background colour ***** 9 for blue:: 0 for black*/
+    SetConsoleTitle("Student Record System ~shubham & atiksha");
+    window();
+    main_window();
+    return 0;
+}
